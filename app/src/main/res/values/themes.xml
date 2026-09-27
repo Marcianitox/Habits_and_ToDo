@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base de la ventana: oscuro, con el fondo azul tinta de la app -->
+    <style name="Theme.HabitsAndToDo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF111A2E</item>
+        <item name="android:colorBackground">#FF111A2E</item>
+    </style>
+
+    <!-- Ventanita flotante de carga rápida (se abre desde los widgets) -->
+    <style name="Theme.HabitsAndToDo.Flotante" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+</resources>
