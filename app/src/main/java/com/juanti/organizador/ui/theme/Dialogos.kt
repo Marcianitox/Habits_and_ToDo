@@ -54,8 +54,8 @@ fun DialogoDeadline(
     var materia by remember { mutableStateOf(inicial?.materia ?: "") }
     var tipo by remember { mutableStateOf(inicial?.tipo ?: TipoDeadline.EXAMEN) }
     var fecha by remember { mutableStateOf(inicial?.fecha ?: LocalDate.now().plusDays(7)) }
-    // Las deadlines nuevas vienen con "1 día antes" marcado
-    var recordatorios by remember { mutableStateOf(inicial?.recordatorios ?: setOf(1)) }
+    // Las deadlines nuevas vienen sin recordatorios
+    var recordatorios by remember { mutableStateOf(inicial?.recordatorios ?: emptySet()) }
     var hora by remember { mutableIntStateOf(inicial?.horaRecordatorio ?: (20 * 60)) }
 
     AlertDialog(
@@ -89,7 +89,7 @@ fun DialogoDeadline(
                 }
                 SelectorFecha(fecha = fecha, onCambio = { fecha = it })
 
-                // Recordatorios
+                // Recordatorios (opcionales)
                 Text(
                     text = "Recordatorios",
                     style = MaterialTheme.typography.labelMedium,
@@ -99,6 +99,11 @@ fun DialogoDeadline(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    FilterChip(
+                        selected = recordatorios.isEmpty(),
+                        onClick = { recordatorios = emptySet() },
+                        label = { Text("Sin recordatorio") }
+                    )
                     OPCIONES_RECORDATORIO.forEach { (dias, texto) ->
                         val elegido = dias in recordatorios
                         FilterChip(
@@ -112,12 +117,6 @@ fun DialogoDeadline(
                 }
                 if (recordatorios.isNotEmpty()) {
                     SelectorHora(minutos = hora, onCambio = { hora = it })
-                } else {
-                    Text(
-                        text = "Sin recordatorios para esta deadline.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
         },
