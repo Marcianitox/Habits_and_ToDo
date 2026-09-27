@@ -1,11 +1,14 @@
 package com.juanti.organizador.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -14,13 +17,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.juanti.organizador.R
+import com.juanti.organizador.widget.actualizarWidgets
+import kotlinx.coroutines.launch
 
 // Las cuatro secciones de la barra de abajo
 enum class Seccion(val titulo: String, val icono: Int) {
@@ -32,7 +43,13 @@ enum class Seccion(val titulo: String, val icono: Int) {
 
 @Composable
 fun AppPrincipal() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var seccion by rememberSaveable { mutableStateOf(Seccion.PLAN) }
+
+    // Cada vez que se toca "refrescar", este número cambia y obliga a las
+    // pantallas a recalcular todo desde cero (incluido el día de hoy)
+    var refresco by remember { mutableIntStateOf(0) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -67,26 +84,44 @@ fun AppPrincipal() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Título grande de la sección
-            Text(
-                text = seccion.titulo,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
+            // Título grande de la sección + botón de refrescar
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 4.dp)
-            )
+                    .padding(start = 20.dp, top = 8.dp, end = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = seccion.titulo,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = {
+                    refresco++
+                    scope.launch { actualizarWidgets(context) }
+                    Toast.makeText(context, "Actualizado", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_refrescar),
+                        contentDescription = "Refrescar",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                when (seccion) {
-                    Seccion.PLAN -> PantallaPlan()
-                    Seccion.DEADLINES -> PantallaDeadlines()
-                    Seccion.HABITOS -> PantallaHabitos()
-                    Seccion.PROGRESO -> PantallaProgreso()
+                key(refresco) {
+                    when (seccion) {
+                        Seccion.PLAN -> PantallaPlan()
+                        Seccion.DEADLINES -> PantallaDeadlines()
+                        Seccion.HABITOS -> PantallaHabitos()
+                        Seccion.PROGRESO -> PantallaProgreso()
+                    }
                 }
             }
         }
