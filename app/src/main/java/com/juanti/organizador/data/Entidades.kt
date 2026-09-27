@@ -1,5 +1,6 @@
 package com.juanti.organizador.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -20,7 +21,13 @@ data class Deadline(
     val materia: String? = null,
     val fecha: LocalDate,
     val notas: String? = null,
-    val completada: Boolean = false
+    val completada: Boolean = false,
+    // Cuántos días antes avisar (0 = el mismo día). Vacío = sin recordatorios.
+    @ColumnInfo(defaultValue = "''")
+    val recordatorios: Set<Int> = emptySet(),
+    // Hora del aviso, en minutos desde las 00:00 (1200 = 20:00)
+    @ColumnInfo(defaultValue = "1200")
+    val horaRecordatorio: Int = 20 * 60
 )
 
 // ---------- PLAN DE ACCIÓN ----------
@@ -76,7 +83,7 @@ data class RegistroHabito(
 )
 
 // ---------- CONVERSORES ----------
-// La base de datos no sabe guardar fechas ni conjuntos de días,
+// La base de datos no sabe guardar fechas ni conjuntos,
 // así que los traducimos a números y texto.
 
 class Convertidores {
@@ -94,4 +101,13 @@ class Convertidores {
     fun textoADias(texto: String): Set<DayOfWeek> =
         if (texto.isBlank()) emptySet()
         else texto.split(",").map { DayOfWeek.of(it.trim().toInt()) }.toSet()
+
+    @TypeConverter
+    fun enterosATexto(valores: Set<Int>): String =
+        valores.sorted().joinToString(",")
+
+    @TypeConverter
+    fun textoAEnteros(texto: String): Set<Int> =
+        if (texto.isBlank()) emptySet()
+        else texto.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
 }
