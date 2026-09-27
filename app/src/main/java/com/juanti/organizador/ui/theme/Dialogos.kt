@@ -7,16 +7,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +31,17 @@ import com.juanti.organizador.data.Deadline
 import com.juanti.organizador.data.TareaPlan
 import com.juanti.organizador.data.TipoDeadline
 import java.time.LocalDate
+
+// Opciones de recordatorio: días antes → texto
+private val OPCIONES_RECORDATORIO = listOf(
+    0 to "El mismo día",
+    1 to "1 día antes",
+    3 to "3 días antes",
+    7 to "1 semana antes"
+)
+
+// Minutos desde las 00:00 → "20:00"
+fun textoHora(minutos: Int): String = "%02d:%02d".format(minutos / 60, minutos % 60)
 
 // Crear (inicial = null) o editar una deadline
 @Composable
@@ -38,12 +54,18 @@ fun DialogoDeadline(
     var materia by remember { mutableStateOf(inicial?.materia ?: "") }
     var tipo by remember { mutableStateOf(inicial?.tipo ?: TipoDeadline.EXAMEN) }
     var fecha by remember { mutableStateOf(inicial?.fecha ?: LocalDate.now().plusDays(7)) }
+    // Las deadlines nuevas vienen con "1 día antes" marcado
+    var recordatorios by remember { mutableStateOf(inicial?.recordatorios ?: setOf(1)) }
+    var hora by remember { mutableIntStateOf(inicial?.horaRecordatorio ?: (20 * 60)) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
         title = { Text(if (inicial == null) "Nueva deadline" else "Editar deadline") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
                 OutlinedTextField(
                     value = titulo,
                     onValueChange = { titulo = it },
@@ -66,6 +88,37 @@ fun DialogoDeadline(
                     }
                 }
                 SelectorFecha(fecha = fecha, onCambio = { fecha = it })
+
+                // Recordatorios
+                Text(
+                    text = "Recordatorios",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OPCIONES_RECORDATORIO.forEach { (dias, texto) ->
+                        val elegido = dias in recordatorios
+                        FilterChip(
+                            selected = elegido,
+                            onClick = {
+                                recordatorios = if (elegido) recordatorios - dias else recordatorios + dias
+                            },
+                            label = { Text(texto) }
+                        )
+                    }
+                }
+                if (recordatorios.isNotEmpty()) {
+                    SelectorHora(minutos = hora, onCambio = { hora = it })
+                } else {
+                    Text(
+                        text = "Sin recordatorios para esta deadline.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         },
         confirmButton = {
@@ -78,7 +131,9 @@ fun DialogoDeadline(
                             titulo = titulo.trim(),
                             materia = materia.trim().ifBlank { null },
                             tipo = tipo,
-                            fecha = fecha
+                            fecha = fecha,
+                            recordatorios = recordatorios,
+                            horaRecordatorio = hora
                         )
                     )
                 }
@@ -88,6 +143,38 @@ fun DialogoDeadline(
             TextButton(onClick = onCancelar) { Text("Cancelar") }
         }
     )
+}
+
+// Botón con la hora; al tocarlo se puede escribir otra
+@Composable
+private fun SelectorHora(minutos: Int, onCambio: (Int) -> Unit) {
+    var abierto by remember { mutableStateOf(false) }
+
+    FilledTonalButton(onClick = { abierto = true }) {
+        Text("A las ${textoHora(minutos)}")
+    }
+
+    if (abierto) {
+        val estado = rememberTimePickerState(
+            initialHour = minutos / 60,
+            initialMinute = minutos % 60,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { abierto = false },
+            title = { Text("Hora del recordatorio") },
+            text = { TimeInput(state = estado) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onCambio(estado.hour * 60 + estado.minute)
+                    abierto = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { abierto = false }) { Text("Cancelar") }
+            }
+        )
+    }
 }
 
 // Crear (inicial = null) o editar una tarea del plan.

@@ -35,9 +35,8 @@ import androidx.lifecycle.lifecycleScope
 import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.Deadline
 import com.juanti.organizador.data.TareaPlan
-import com.juanti.organizador.data.TipoDeadline
+import com.juanti.organizador.ui.DialogoDeadline
 import com.juanti.organizador.ui.SelectorFecha
-import com.juanti.organizador.ui.nombreTipo
 import com.juanti.organizador.ui.theme.HabitsAndToDoTheme
 import com.juanti.organizador.widget.TIPO_COMPLETAR_DEADLINE
 import com.juanti.organizador.widget.TIPO_DEADLINE
@@ -58,7 +57,8 @@ class ActividadCargaRapida : ComponentActivity() {
         setContent {
             HabitsAndToDoTheme {
                 when (tipo) {
-                    TIPO_DEADLINE -> FormularioDeadline(
+                    TIPO_DEADLINE -> DialogoDeadline(
+                        inicial = null,
                         onCancelar = { finish() },
                         onGuardar = { d -> guardar { it.deadlineDao().insertar(d) } }
                     )
@@ -78,7 +78,7 @@ class ActividadCargaRapida : ComponentActivity() {
         }
     }
 
-    // Guarda, refresca los widgets y cierra la ventanita
+    // Guarda, refresca widgets y recordatorios, y cierra la ventanita
     private fun guardar(accion: suspend (BaseDeDatos) -> Unit) {
         lifecycleScope.launch {
             accion(BaseDeDatos.obtener(applicationContext))
@@ -150,69 +150,6 @@ private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Un
                 enabled = titulo.isNotBlank(),
                 onClick = {
                     onGuardar(TareaPlan(titulo = titulo.trim(), fecha = fecha, deadlineId = deadlineId))
-                }
-            ) { Text("Guardar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onCancelar) { Text("Cancelar") }
-        }
-    )
-}
-
-@Composable
-private fun FormularioDeadline(onCancelar: () -> Unit, onGuardar: (Deadline) -> Unit) {
-    var titulo by remember { mutableStateOf("") }
-    var materia by remember { mutableStateOf("") }
-    var tipo by remember { mutableStateOf(TipoDeadline.EXAMEN) }
-    var fecha by remember { mutableStateOf(LocalDate.now().plusDays(7)) }
-    val foco = remember { FocusRequester() }
-
-    AlertDialog(
-        onDismissRequest = onCancelar,
-        title = { Text("Nueva deadline") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                OutlinedTextField(
-                    value = titulo,
-                    onValueChange = { titulo = it },
-                    label = { Text("Título") },
-                    singleLine = true,
-                    modifier = Modifier.focusRequester(foco)
-                )
-                LaunchedEffect(Unit) {
-                    delay(150)
-                    runCatching { foco.requestFocus() }
-                }
-                OutlinedTextField(
-                    value = materia,
-                    onValueChange = { materia = it },
-                    label = { Text("Materia (opcional)") },
-                    singleLine = true
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TipoDeadline.entries.forEach { t ->
-                        FilterChip(
-                            selected = tipo == t,
-                            onClick = { tipo = t },
-                            label = { Text(nombreTipo(t)) }
-                        )
-                    }
-                }
-                SelectorFecha(fecha = fecha, onCambio = { fecha = it })
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = titulo.isNotBlank(),
-                onClick = {
-                    onGuardar(
-                        Deadline(
-                            titulo = titulo.trim(),
-                            materia = materia.trim().ifBlank { null },
-                            tipo = tipo,
-                            fecha = fecha
-                        )
-                    )
                 }
             ) { Text("Guardar") }
         },

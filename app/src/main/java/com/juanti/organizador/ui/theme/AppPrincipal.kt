@@ -1,6 +1,11 @@
 package com.juanti.organizador.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +21,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -29,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.juanti.organizador.R
+import com.juanti.organizador.recordatorios.reprogramarRecordatorios
 import com.juanti.organizador.widget.actualizarWidgets
 import kotlinx.coroutines.launch
 
@@ -50,6 +58,20 @@ fun AppPrincipal() {
     // Cada vez que se toca "refrescar", este número cambia y obliga a las
     // pantallas a recalcular todo desde cero (incluido el día de hoy)
     var refresco by remember { mutableIntStateOf(0) }
+
+    // Pedir permiso de notificaciones (Android 13 o más nuevo) y programar recordatorios
+    val pedirPermiso = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            pedirPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        reprogramarRecordatorios(context)
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
