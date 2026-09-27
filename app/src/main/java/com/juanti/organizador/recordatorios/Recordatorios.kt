@@ -22,6 +22,8 @@ import com.juanti.organizador.MainActivity
 import com.juanti.organizador.R
 import com.juanti.organizador.data.BaseDeDatos
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -35,6 +37,14 @@ private const val CLAVE_DIAS = "dias"
 // Leer desde muy atrás = todas las deadlines no completadas
 private val DESDE_SIEMPRE: LocalDate = LocalDate.of(2000, 1, 1)
 
+// Evita que dos reprogramaciones se pisen si se llaman casi al mismo tiempo
+private val candado = Mutex()
+
+// "Firma" de lo que determina los avisos programados la última vez.
+// Si no cambió, no hace falta reprogramar nada.
+@Volatile
+private var ultimaFirma: String? = null
+
 // Crea el canal de notificaciones (Android lo exige; si ya existe, no hace nada)
 fun crearCanal(context: Context) {
     val canal = NotificationChannel(
@@ -47,17 +57,24 @@ fun crearCanal(context: Context) {
     context.getSystemService(NotificationManager::class.java).createNotificationChannel(canal)
 }
 
-// Cancela todos los avisos programados y los vuelve a programar
-// según cómo están las deadlines ahora mismo
-suspend fun reprogramarRecordatorios(context: Context) {
+// Reprograma los avisos solo si cambió algo que los afecta
+// (qué deadlines están pendientes, su fecha, sus recordatorios o su hora).
+// Tildar hábitos o tareas no cambia la firma, así que no hace nada.
+suspend fun reprogramarRecordatorios(context: Context) = candado.withLock {
+    val deadlines = BaseDeDatos.obtener(context).deadlineDao()
+        .pendientesConPlan(DESDE_SIEMPRE).first()
+        .map { it.deadline }
+
+    val firma = deadlines.joinToString("|") {
+        "${it.id};${it.fecha};${it.recordatorios.sorted()};${it.horaRecordatorio}"
+    }
+    if (firma == ultimaFirma) return@withLock
+
     val trabajos = WorkManager.getInstance(context)
     trabajos.cancelAllWorkByTag(ETIQUETA)
 
     val ahora = LocalDateTime.now()
-    val deadlines = BaseDeDatos.obtener(context).deadlineDao().pendientesConPlan(DESDE_SIEMPRE).first()
-
-    for (dcp in deadlines) {
-        val d = dcp.deadline
+    for (d in deadlines) {
         for (dias in d.recordatorios) {
             val momento = d.fecha
                 .minusDays(dias.toLong())
@@ -74,9 +91,12 @@ suspend fun reprogramarRecordatorios(context: Context) {
             trabajos.enqueueUniqueWork("recordatorio_${d.id}_$dias", ExistingWorkPolicy.REPLACE, pedido)
         }
     }
+
+    ultimaFirma = firma
 }
 
 // Se ejecuta a la hora programada y muestra la notificación
+// (el texto se arma en ese momento, con los datos actualizados)
 class TrabajadorRecordatorio(
     context: Context,
     params: WorkerParameters

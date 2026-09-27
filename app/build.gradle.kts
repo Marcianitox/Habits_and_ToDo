@@ -24,11 +24,16 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Optimiza y achica el código (R8) y saca los recursos sin usar
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Misma clave que la versión de depuración:
+            // permite instalar encima sin desinstalar (no se pierden datos)
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
