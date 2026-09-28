@@ -50,10 +50,21 @@ enum class Seccion(val titulo: String, val icono: Int) {
 }
 
 @Composable
-fun AppPrincipal() {
+fun AppPrincipal(
+    seccionPedida: Seccion? = null,
+    onSeccionAbierta: () -> Unit = {}
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var seccion by rememberSaveable { mutableStateOf(Seccion.PLAN) }
+
+    // Si un widget pidió una sección, ir a esa
+    LaunchedEffect(seccionPedida) {
+        if (seccionPedida != null) {
+            seccion = seccionPedida
+            onSeccionAbierta()
+        }
+    }
 
     // Cada vez que se toca "refrescar", este número cambia y obliga a las
     // pantallas a recalcular todo desde cero (incluido el día de hoy)

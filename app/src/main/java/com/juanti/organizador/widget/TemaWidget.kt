@@ -1,8 +1,13 @@
 package com.juanti.organizador.widget
 
 import androidx.compose.material3.darkColorScheme
+import androidx.glance.action.Action
 import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
+import androidx.glance.action.actionStartActivity
 import androidx.glance.material3.ColorProviders
+import com.juanti.organizador.MainActivity
+import com.juanti.organizador.ui.Seccion
 import com.juanti.organizador.ui.theme.Contorno
 import com.juanti.organizador.ui.theme.Coral
 import com.juanti.organizador.ui.theme.CoralContenedor
@@ -55,7 +60,12 @@ val ColoresWidget = ColorProviders(light = EsquemaWidget, dark = EsquemaWidget)
 // Claves que viajan con los botones de los widgets
 val CLAVE_ID = ActionParameters.Key<Long>("id")
 val CLAVE_TIPO = ActionParameters.Key<String>("tipo")
+val CLAVE_SECCION = ActionParameters.Key<String>("seccion")
 
 // Qué formulario abre la ventanita de carga rápida
 const val TIPO_TAREA = "tarea"
 const val TIPO_DEADLINE = "deadline"
+
+// Acción que abre la app directamente en una sección
+fun abrirSeccion(seccion: Seccion): Action =
+    actionStartActivity<MainActivity>(actionParametersOf(CLAVE_SECCION to seccion.name))

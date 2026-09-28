@@ -40,11 +40,11 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.juanti.organizador.ActividadCargaRapida
-import com.juanti.organizador.MainActivity
 import com.juanti.organizador.R
 import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.Deadline
 import com.juanti.organizador.data.TareaPlan
+import com.juanti.organizador.ui.Seccion
 import com.juanti.organizador.ui.formatoFecha
 import com.juanti.organizador.ui.textoDiasRestantes
 import kotlinx.coroutines.flow.first
@@ -97,12 +97,12 @@ private fun ContenidoPlan(
             .cornerRadius(24.dp)
             .padding(14.dp)
     ) {
-        // Encabezado: "Hoy" + fecha (abre la app) y botón +
+        // Encabezado: "Hoy" + fecha (abre la sección Plan) y botón +
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = GlanceModifier.defaultWeight().clickable(actionStartActivity<MainActivity>())) {
+            Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PLAN))) {
                 Text(
                     text = "Hoy",
                     style = TextStyle(
@@ -141,7 +141,7 @@ private fun ContenidoPlan(
 
         if (pendientes.isEmpty() && atrasadas.isEmpty()) {
             Box(
-                modifier = GlanceModifier.fillMaxSize(),
+                modifier = GlanceModifier.fillMaxSize().clickable(abrirSeccion(Seccion.PLAN)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -207,7 +207,8 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
                 )
             }
             Spacer(modifier = GlanceModifier.width(6.dp))
-            Column(modifier = GlanceModifier.defaultWeight()) {
+            // Texto (abre la sección Plan)
+            Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PLAN))) {
                 Text(
                     text = tarea.titulo,
                     maxLines = 2,

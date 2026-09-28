@@ -37,10 +37,10 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.juanti.organizador.ActividadCargaRapida
-import com.juanti.organizador.MainActivity
 import com.juanti.organizador.R
 import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.DeadlineConPlan
+import com.juanti.organizador.ui.Seccion
 import com.juanti.organizador.ui.nombreTipo
 import com.juanti.organizador.ui.textoDiasRestantes
 import kotlinx.coroutines.flow.first
@@ -87,12 +87,12 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
             .cornerRadius(24.dp)
             .padding(14.dp)
     ) {
-        // Encabezado (abre la app) + botón +
+        // Encabezado (abre la sección Deadlines) + botón +
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = GlanceModifier.defaultWeight().clickable(actionStartActivity<MainActivity>())) {
+            Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.DEADLINES))) {
                 Text(
                     text = "Deadlines",
                     style = TextStyle(
@@ -134,7 +134,7 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
 
         if (deadlines.isEmpty()) {
             Box(
-                modifier = GlanceModifier.fillMaxSize(),
+                modifier = GlanceModifier.fillMaxSize().clickable(abrirSeccion(Seccion.DEADLINES)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -227,8 +227,8 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
 
             Spacer(modifier = GlanceModifier.width(10.dp))
 
-            // Datos (abre la app)
-            Column(modifier = GlanceModifier.defaultWeight().clickable(actionStartActivity<MainActivity>())) {
+            // Datos (abren la sección Deadlines)
+            Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.DEADLINES))) {
                 Text(
                     text = d.titulo,
                     maxLines = 1,
@@ -283,4 +283,3 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
 class ReceptorDeadlines : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = WidgetDeadlines()
 }
-

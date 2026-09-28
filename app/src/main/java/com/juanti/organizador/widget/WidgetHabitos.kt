@@ -13,7 +13,6 @@ import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -38,7 +37,6 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.juanti.organizador.MainActivity
 import com.juanti.organizador.R
 import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.Habito
@@ -47,6 +45,7 @@ import com.juanti.organizador.data.TipoFrecuencia
 import com.juanti.organizador.data.apareceHoy
 import com.juanti.organizador.data.textoRacha
 import com.juanti.organizador.data.vecesEnSemana
+import com.juanti.organizador.ui.Seccion
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -105,8 +104,8 @@ private fun ContenidoHabitos(
             .cornerRadius(24.dp)
             .padding(14.dp)
     ) {
-        // Encabezado (abre la app)
-        Column(modifier = GlanceModifier.fillMaxWidth().clickable(actionStartActivity<MainActivity>())) {
+        // Encabezado (abre la sección Hábitos)
+        Column(modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.HABITOS))) {
             Text(
                 text = "Hábitos",
                 style = TextStyle(
@@ -125,7 +124,7 @@ private fun ContenidoHabitos(
 
         if (deHoy.isEmpty()) {
             Box(
-                modifier = GlanceModifier.fillMaxSize(),
+                modifier = GlanceModifier.fillMaxSize().clickable(abrirSeccion(Seccion.HABITOS)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -183,27 +182,33 @@ private fun FilaHabitoWidget(habito: Habito, hecho: Boolean, hechos: Set<LocalDa
                 )
             }
             Spacer(modifier = GlanceModifier.width(6.dp))
-            Text(
-                text = habito.nombre,
-                maxLines = 1,
-                modifier = GlanceModifier.defaultWeight(),
-                style = TextStyle(
-                    color = if (hecho) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.onSurface,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
+            // Nombre y racha (abren la sección Hábitos)
+            Row(
+                modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.HABITOS)),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = habito.nombre,
+                    maxLines = 1,
+                    modifier = GlanceModifier.defaultWeight(),
+                    style = TextStyle(
+                        color = if (hecho) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.onSurface,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
-            Spacer(modifier = GlanceModifier.width(8.dp))
-            Text(
-                text = detalle,
-                maxLines = 1,
-                style = TextStyle(
-                    color = if (semanal) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.primary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                Spacer(modifier = GlanceModifier.width(8.dp))
+                Text(
+                    text = detalle,
+                    maxLines = 1,
+                    style = TextStyle(
+                        color = if (semanal) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
-            Spacer(modifier = GlanceModifier.width(6.dp))
+                Spacer(modifier = GlanceModifier.width(6.dp))
+            }
         }
     }
 }
