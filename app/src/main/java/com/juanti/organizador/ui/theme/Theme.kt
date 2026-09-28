@@ -3,48 +3,10 @@ package com.juanti.organizador.ui.theme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-
-private val EsquemaTintaYGirasol = darkColorScheme(
-    primary = Girasol,
-    onPrimary = SobreGirasol,
-    primaryContainer = GirasolContenedor,
-    onPrimaryContainer = SobreGirasolContenedor,
-
-    secondary = TintaClara,
-    onSecondary = TintaFondo,
-    secondaryContainer = TintaSeleccion,
-    onSecondaryContainer = Texto,
-
-    tertiary = Menta,
-    onTertiary = SobreMenta,
-    tertiaryContainer = MentaContenedor,
-    onTertiaryContainer = SobreMentaContenedor,
-
-    error = Coral,
-    onError = SobreCoral,
-    errorContainer = CoralContenedor,
-    onErrorContainer = SobreCoralContenedor,
-
-    background = TintaFondo,
-    onBackground = Texto,
-    surface = TintaFondo,
-    onSurface = Texto,
-    surfaceVariant = TintaElevada,
-    onSurfaceVariant = TextoSuave,
-    surfaceTint = TintaElevada,
-
-    surfaceContainerLowest = TintaProfunda,
-    surfaceContainerLow = TintaBaja,
-    surfaceContainer = TintaBarra,
-    surfaceContainerHigh = TintaElevada,
-    surfaceContainerHighest = TintaTarjeta,
-
-    outline = Contorno,
-    outlineVariant = ContornoSuave
-)
 
 // Bordes redondeados
 private val Formas = Shapes(
@@ -55,11 +17,18 @@ private val Formas = Shapes(
     extraLarge = RoundedCornerShape(32.dp)
 )
 
-// Siempre oscuro y con colores propios (sin color dinámico del fondo de pantalla)
+// Tema de la app con la paleta elegida.
+// Si no se indica una paleta, usa la que el usuario dejó guardada.
 @Composable
-fun HabitsAndToDoTheme(content: @Composable () -> Unit) {
+fun HabitsAndToDoTheme(
+    paleta: Paleta? = null,
+    content: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+    val elegida = paleta ?: remember { leerPaleta(context) }
+
     MaterialTheme(
-        colorScheme = EsquemaTintaYGirasol,
+        colorScheme = elegida.esquema,
         typography = Typography,
         shapes = Formas,
         content = content

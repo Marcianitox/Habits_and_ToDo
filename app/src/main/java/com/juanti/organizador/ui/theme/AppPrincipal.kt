@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.juanti.organizador.R
 import com.juanti.organizador.recordatorios.reprogramarRecordatorios
+import com.juanti.organizador.ui.theme.Paleta
 import com.juanti.organizador.widget.actualizarWidgets
 import kotlinx.coroutines.launch
 
@@ -52,11 +53,14 @@ enum class Seccion(val titulo: String, val icono: Int) {
 @Composable
 fun AppPrincipal(
     seccionPedida: Seccion? = null,
-    onSeccionAbierta: () -> Unit = {}
+    onSeccionAbierta: () -> Unit = {},
+    paleta: Paleta = Paleta.TINTA,
+    onCambiarPaleta: (Paleta) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var seccion by rememberSaveable { mutableStateOf(Seccion.PLAN) }
+    var eligiendoPaleta by remember { mutableStateOf(false) }
 
     // Si un widget pidió una sección, ir a esa
     LaunchedEffect(seccionPedida) {
@@ -117,7 +121,7 @@ fun AppPrincipal(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Título grande de la sección + botón de refrescar
+            // Título grande de la sección + paleta + refrescar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,6 +134,13 @@ fun AppPrincipal(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = { eligiendoPaleta = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_paleta),
+                        contentDescription = "Paleta de colores",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 IconButton(onClick = {
                     refresco++
                     scope.launch { actualizarWidgets(context) }
@@ -158,5 +169,16 @@ fun AppPrincipal(
                 }
             }
         }
+    }
+
+    if (eligiendoPaleta) {
+        DialogoPaletas(
+            actual = paleta,
+            onElegir = { nueva ->
+                onCambiarPaleta(nueva)
+                scope.launch { actualizarWidgets(context) }
+            },
+            onCerrar = { eligiendoPaleta = false }
+        )
     }
 }
