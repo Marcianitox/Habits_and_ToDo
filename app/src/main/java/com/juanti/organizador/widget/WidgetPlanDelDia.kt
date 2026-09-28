@@ -12,6 +12,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -69,7 +70,8 @@ class WidgetPlanDelDia : GlanceAppWidget() {
             val atrasadas by flujoAtrasadas.collectAsState(initial = inicialAtrasadas)
             val deadlines by flujoDeadlines.collectAsState(initial = inicialDeadlines)
 
-            GlanceTheme(colors = ColoresWidget) {
+            // Se lee en cada actualización, así un cambio de paleta se ve enseguida
+            GlanceTheme(colors = coloresWidget(LocalContext.current)) {
                 ContenidoPlan(
                     hoy = hoy,
                     pendientes = deHoy.filter { !it.completada },
@@ -95,9 +97,9 @@ private fun ContenidoPlan(
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
-        // Encabezado: "Hoy" + fecha (abre la sección Plan) y botón +
+        // Encabezado compacto: "Hoy" + fecha (abre Plan) y botón +
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -107,19 +109,19 @@ private fun ContenidoPlan(
                     text = "Hoy",
                     style = TextStyle(
                         color = GlanceTheme.colors.primary,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
                 Text(
                     text = formatoFecha(hoy),
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
+                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp)
                 )
             }
             Box(
                 modifier = GlanceModifier
-                    .size(40.dp)
-                    .cornerRadius(20.dp)
+                    .size(34.dp)
+                    .cornerRadius(17.dp)
                     .background(GlanceTheme.colors.primary)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
@@ -131,13 +133,13 @@ private fun ContenidoPlan(
                 Image(
                     provider = ImageProvider(R.drawable.ic_agregar),
                     contentDescription = "Agregar tarea",
-                    modifier = GlanceModifier.size(22.dp),
+                    modifier = GlanceModifier.size(20.dp),
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
                 )
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(10.dp))
+        Spacer(modifier = GlanceModifier.height(6.dp))
 
         if (pendientes.isEmpty() && atrasadas.isEmpty()) {
             Box(
@@ -185,14 +187,14 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
             modifier = GlanceModifier
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
-                .cornerRadius(14.dp)
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .cornerRadius(16.dp)
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Casilla (zona táctil de 36dp)
+            // Casilla (zona táctil de 44dp)
             Box(
                 modifier = GlanceModifier
-                    .size(36.dp)
+                    .size(44.dp)
                     .clickable(
                         actionRunCallback<AccionCompletarTarea>(
                             actionParametersOf(CLAVE_ID to tarea.id)
@@ -200,13 +202,9 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    provider = ImageProvider(R.drawable.widget_casilla_vacia),
-                    contentDescription = "Completar",
-                    modifier = GlanceModifier.size(24.dp)
-                )
+                CasillaWidget(marcada = false, tamano = 30.dp)
             }
-            Spacer(modifier = GlanceModifier.width(6.dp))
+            Spacer(modifier = GlanceModifier.width(4.dp))
             // Texto (abre la sección Plan)
             Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PLAN))) {
                 Text(
@@ -214,7 +212,7 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
                     maxLines = 2,
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurface,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -224,7 +222,7 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
                         maxLines = 1,
                         style = TextStyle(
                             color = if (atrasada) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp
+                            fontSize = 12.sp
                         )
                     )
                 }

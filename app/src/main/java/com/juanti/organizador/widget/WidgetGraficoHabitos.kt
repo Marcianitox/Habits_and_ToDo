@@ -6,11 +6,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
@@ -92,7 +94,8 @@ class WidgetGraficoHabitos : GlanceAppWidget() {
             val hechosPorHabito: Map<Long, Set<LocalDate>> =
                 registros.groupBy({ it.habitoId }, { it.fecha }).mapValues { it.value.toSet() }
 
-            GlanceTheme(colors = ColoresWidget) {
+            // Se lee en cada actualización, así un cambio de paleta se ve enseguida
+            GlanceTheme(colors = coloresWidget(LocalContext.current)) {
                 ContenidoGrafico(
                     hoy = hoy,
                     habitos = habitos,
@@ -118,25 +121,29 @@ private fun ContenidoGrafico(
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
-        // Encabezado (abre la sección Progreso)
-        Column(modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.PROGRESO))) {
+        // Encabezado compacto (abre la sección Progreso)
+        Row(
+            modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.PROGRESO)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 text = "Esta semana",
+                modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(
                     color = GlanceTheme.colors.primary,
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
                 text = textoSemana(lunes),
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp)
             )
         }
 
-        Spacer(modifier = GlanceModifier.height(8.dp))
+        Spacer(modifier = GlanceModifier.height(6.dp))
 
         if (habitos.isEmpty()) {
             Box(
@@ -222,7 +229,7 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
                 .cornerRadius(12.dp)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(horizontal = 8.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Nombre (abre la sección Progreso)
@@ -232,7 +239,7 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
                 modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PROGRESO)),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
             )
@@ -242,7 +249,7 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
                 val hecho = dia in hechos
                 val sePuedeTocar = !dia.isAfter(hoy) && (habito.tocaEl(dia) || hecho)
 
-                var modificador = GlanceModifier.width(26.dp).height(32.dp)
+                var modificador = GlanceModifier.width(26.dp).height(36.dp)
                 if (sePuedeTocar) {
                     modificador = modificador.clickable(
                         actionRunCallback<AccionAlternarDiaHabito>(
@@ -255,11 +262,7 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
                 }
 
                 Box(modifier = modificador, contentAlignment = Alignment.Center) {
-                    Image(
-                        provider = ImageProvider(iconoDia(habito, dia, hoy, hechos)),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(18.dp)
-                    )
+                    IconoDia(habito = habito, dia = dia, hoy = hoy, hechos = hechos)
                 }
             }
             Text(
@@ -276,14 +279,27 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
     }
 }
 
-// Qué símbolo lleva cada día de la tabla semanal
-private fun iconoDia(habito: Habito, dia: LocalDate, hoy: LocalDate, hechos: Set<LocalDate>): Int = when {
-    dia in hechos -> R.drawable.widget_casilla_tildada
-    !habito.tocaEl(dia) -> R.drawable.widget_dia_libre
-    dia.isAfter(hoy) -> R.drawable.widget_casilla_vacia
-    dia == hoy -> R.drawable.widget_dia_hoy
-    habito.tipoFrecuencia == TipoFrecuencia.VECES_POR_SEMANA -> R.drawable.widget_casilla_vacia
-    else -> R.drawable.widget_dia_falto
+// El símbolo de cada día, pintado con los colores de la paleta
+@Composable
+private fun IconoDia(habito: Habito, dia: LocalDate, hoy: LocalDate, hechos: Set<LocalDate>) {
+    if (dia in hechos) {
+        CasillaWidget(marcada = true, tamano = 22.dp)
+        return
+    }
+    val (dibujo, color) = when {
+        !habito.tocaEl(dia) -> R.drawable.widget_dia_libre to GlanceTheme.colors.outline
+        dia.isAfter(hoy) -> R.drawable.widget_casilla_vacia to GlanceTheme.colors.outline
+        dia == hoy -> R.drawable.widget_dia_hoy to GlanceTheme.colors.primary
+        habito.tipoFrecuencia == TipoFrecuencia.VECES_POR_SEMANA ->
+            R.drawable.widget_casilla_vacia to GlanceTheme.colors.outline
+        else -> R.drawable.widget_dia_falto to GlanceTheme.colors.error
+    }
+    Image(
+        provider = ImageProvider(dibujo),
+        contentDescription = null,
+        modifier = GlanceModifier.size(22.dp),
+        colorFilter = ColorFilter.tint(color)
+    )
 }
 
 // Calendario del mes: todos los hábitos combinados (tocarlo abre Progreso)
@@ -309,7 +325,7 @@ private fun CalendarioMes(
             text = primero.format(FORMATO_MES).replaceFirstChar { it.uppercase() },
             style = TextStyle(
                 color = GlanceTheme.colors.onSurface,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
         )

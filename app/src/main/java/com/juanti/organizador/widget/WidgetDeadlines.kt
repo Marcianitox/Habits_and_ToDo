@@ -12,6 +12,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -64,7 +65,8 @@ class WidgetDeadlines : GlanceAppWidget() {
 
         provideContent {
             val deadlines by flujo.collectAsState(initial = inicial)
-            GlanceTheme(colors = ColoresWidget) {
+            // Se lee en cada actualización, así un cambio de paleta se ve enseguida
+            GlanceTheme(colors = coloresWidget(LocalContext.current)) {
                 ContenidoDeadlines(hoy = hoy, deadlines = deadlines)
             }
         }
@@ -85,9 +87,9 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
-        // Encabezado (abre la sección Deadlines) + botón +
+        // Encabezado compacto (abre la sección Deadlines) + botón +
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -97,7 +99,7 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
                     text = "Deadlines",
                     style = TextStyle(
                         color = GlanceTheme.colors.primary,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -105,14 +107,14 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
                     text = subtitulo,
                     style = TextStyle(
                         color = if (vencidas > 0) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 11.sp
                     )
                 )
             }
             Box(
                 modifier = GlanceModifier
-                    .size(40.dp)
-                    .cornerRadius(20.dp)
+                    .size(34.dp)
+                    .cornerRadius(17.dp)
                     .background(GlanceTheme.colors.primary)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
@@ -124,13 +126,13 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
                 Image(
                     provider = ImageProvider(R.drawable.ic_agregar),
                     contentDescription = "Agregar deadline",
-                    modifier = GlanceModifier.size(22.dp),
+                    modifier = GlanceModifier.size(20.dp),
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
                 )
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(10.dp))
+        Spacer(modifier = GlanceModifier.height(6.dp))
 
         if (deadlines.isEmpty()) {
             Box(
@@ -178,8 +180,8 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
             modifier = GlanceModifier
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
-                .cornerRadius(14.dp)
-                .padding(8.dp),
+                .cornerRadius(16.dp)
+                .padding(start = 8.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Cuenta regresiva
@@ -234,7 +236,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                     maxLines = 1,
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurface,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -243,7 +245,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                     maxLines = 1,
                     style = TextStyle(
                         color = if (vencida) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 )
                 Text(
@@ -251,15 +253,15 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                     maxLines = 1,
                     style = TextStyle(
                         color = if (total == 0) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.tertiary,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 )
             }
 
-            // Completar (abre una confirmación)
+            // Completar (abre una confirmación) — zona táctil de 44dp
             Box(
                 modifier = GlanceModifier
-                    .size(40.dp)
+                    .size(44.dp)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
                             actionParametersOf(
@@ -270,11 +272,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    provider = ImageProvider(R.drawable.widget_casilla_vacia),
-                    contentDescription = "Marcar como completada",
-                    modifier = GlanceModifier.size(24.dp)
-                )
+                CasillaWidget(marcada = false, tamano = 30.dp)
             }
         }
     }

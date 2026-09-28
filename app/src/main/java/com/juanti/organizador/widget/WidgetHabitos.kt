@@ -9,8 +9,7 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
@@ -37,7 +36,6 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.juanti.organizador.R
 import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.Habito
 import com.juanti.organizador.data.RegistroHabito
@@ -76,7 +74,8 @@ class WidgetHabitos : GlanceAppWidget() {
                 .filter { it.apareceHoy(hoy, hechosPorHabito[it.id].orEmpty()) }
                 .sortedBy { hoy in hechosPorHabito[it.id].orEmpty() }
 
-            GlanceTheme(colors = ColoresWidget) {
+            // Se lee en cada actualización, así un cambio de paleta se ve enseguida
+            GlanceTheme(colors = coloresWidget(LocalContext.current)) {
                 ContenidoHabitos(
                     hoy = hoy,
                     deHoy = deHoy,
@@ -102,25 +101,31 @@ private fun ContenidoHabitos(
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
-        // Encabezado (abre la sección Hábitos)
-        Column(modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.HABITOS))) {
+        // Encabezado compacto (abre la sección Hábitos)
+        Row(
+            modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.HABITOS)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 text = "Hábitos",
+                modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(
                     color = GlanceTheme.colors.primary,
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
-            Text(
-                text = if (deHoy.isEmpty()) "Hoy" else "Hoy · $hechosHoy de ${deHoy.size} hechos",
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
-            )
+            if (deHoy.isNotEmpty()) {
+                Text(
+                    text = "$hechosHoy de ${deHoy.size} hoy",
+                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp)
+                )
+            }
         }
 
-        Spacer(modifier = GlanceModifier.height(10.dp))
+        Spacer(modifier = GlanceModifier.height(6.dp))
 
         if (deHoy.isEmpty()) {
             Box(
@@ -158,14 +163,14 @@ private fun FilaHabitoWidget(habito: Habito, hecho: Boolean, hechos: Set<LocalDa
             modifier = GlanceModifier
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
-                .cornerRadius(14.dp)
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .cornerRadius(16.dp)
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Casilla (zona táctil de 36dp)
+            // Casilla (zona táctil de 44dp)
             Box(
                 modifier = GlanceModifier
-                    .size(36.dp)
+                    .size(44.dp)
                     .clickable(
                         actionRunCallback<AccionAlternarHabito>(
                             actionParametersOf(CLAVE_ID to habito.id)
@@ -173,15 +178,9 @@ private fun FilaHabitoWidget(habito: Habito, hecho: Boolean, hechos: Set<LocalDa
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    provider = ImageProvider(
-                        if (hecho) R.drawable.widget_casilla_tildada else R.drawable.widget_casilla_vacia
-                    ),
-                    contentDescription = if (hecho) "Desmarcar" else "Marcar como hecho",
-                    modifier = GlanceModifier.size(24.dp)
-                )
+                CasillaWidget(marcada = hecho, tamano = 30.dp)
             }
-            Spacer(modifier = GlanceModifier.width(6.dp))
+            Spacer(modifier = GlanceModifier.width(4.dp))
             // Nombre y racha (abren la sección Hábitos)
             Row(
                 modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.HABITOS)),
@@ -193,7 +192,7 @@ private fun FilaHabitoWidget(habito: Habito, hecho: Boolean, hechos: Set<LocalDa
                     modifier = GlanceModifier.defaultWeight(),
                     style = TextStyle(
                         color = if (hecho) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.onSurface,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -203,11 +202,11 @@ private fun FilaHabitoWidget(habito: Habito, hecho: Boolean, hechos: Set<LocalDa
                     maxLines = 1,
                     style = TextStyle(
                         color = if (semanal) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.primary,
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
-                Spacer(modifier = GlanceModifier.width(6.dp))
+                Spacer(modifier = GlanceModifier.width(8.dp))
             }
         }
     }
