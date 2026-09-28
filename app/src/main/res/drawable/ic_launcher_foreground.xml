@@ -1,95 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Girasol estilizado (dentro de la zona segura del ícono adaptativo) -->
+<!-- Monograma "H": trazos verdes unidos por un tilde naranja -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Pétalos de atrás (más oscuros y un poco más largos) -->
-    <group android:pivotX="54" android:pivotY="54" android:rotation="15">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="45">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="75">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="105">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="135">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="165">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="195">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="225">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="255">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="285">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="315">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="345">
-        <path android:fillColor="#FFC98A16" android:pathData="M54,25C59,31 59,40 54,46C49,40 49,31 54,25Z" />
-    </group>
+    <!-- Trazo izquierdo (menta) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF3FB39A"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M40,36L40,72" />
 
-    <!-- Pétalos de adelante (girasol) -->
-    <group android:pivotX="54" android:pivotY="54" android:rotation="0">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="30">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="60">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="90">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="120">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="150">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="180">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="210">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="240">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="270">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="300">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
-    <group android:pivotX="54" android:pivotY="54" android:rotation="330">
-        <path android:fillColor="#FFF2B632" android:pathData="M54,28C58,33 58,40 54,46C50,40 50,33 54,28Z" />
-    </group>
+    <!-- Trazo derecho (menta) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF3FB39A"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M68,36L68,72" />
 
-    <!-- Centro -->
+    <!-- Borde del tilde, del color del fondo: lo separa de los trazos -->
     <path
-        android:fillColor="#FF2B1E00"
-        android:pathData="M54,42a12,12 0,1 1,0 24a12,12 0,1 1,0 -24z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FF1F2B4D"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M40,54L51,64L68,45" />
+
+    <!-- Tilde (naranja) -->
     <path
-        android:fillColor="#FF4A3A0F"
-        android:pathData="M54,47a7,7 0,1 1,0 14a7,7 0,1 1,0 -14z" />
-    <path
-        android:fillColor="#FF6B5418"
-        android:pathData="M51,49a2,2 0,1 1,0 4a2,2 0,1 1,0 -4z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFF5A03A"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M40,54L51,64L68,45" />
 </vector>
