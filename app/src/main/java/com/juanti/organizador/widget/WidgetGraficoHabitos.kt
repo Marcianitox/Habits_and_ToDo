@@ -12,11 +12,14 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
-import androidx.glance.action.actionStartActivity
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
@@ -38,14 +41,15 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.juanti.organizador.MainActivity
 import com.juanti.organizador.R
-import com.juanti.organizador.data.Habito
 import com.juanti.organizador.data.BaseDeDatos
+import com.juanti.organizador.data.Habito
+import com.juanti.organizador.data.RegistroHabito
 import com.juanti.organizador.data.TipoFrecuencia
 import com.juanti.organizador.data.evolucionSemanal
 import com.juanti.organizador.data.inicioDeSemana
 import com.juanti.organizador.data.tocaEl
+import com.juanti.organizador.ui.Seccion
 import kotlinx.coroutines.flow.first
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -60,6 +64,9 @@ private val FORMATO_DIA_MES = DateTimeFormatter.ofPattern("d 'de' MMM", ES)
 
 // A partir de esta altura aparece el calendario del mes
 private val ALTO_PARA_MES = 300.dp
+
+// Qué día se tocó en la tabla (como número de día, para poder mandarlo en la acción)
+private val CLAVE_FECHA = ActionParameters.Key<Long>("fecha")
 
 // Widget "Hábitos: semana y calendario"
 class WidgetGraficoHabitos : GlanceAppWidget() {
@@ -113,8 +120,8 @@ private fun ContenidoGrafico(
             .cornerRadius(24.dp)
             .padding(14.dp)
     ) {
-        // Encabezado (abre la app)
-        Column(modifier = GlanceModifier.fillMaxWidth().clickable(actionStartActivity<MainActivity>())) {
+        // Encabezado (abre la sección Progreso)
+        Column(modifier = GlanceModifier.fillMaxWidth().clickable(abrirSeccion(Seccion.PROGRESO))) {
             Text(
                 text = "Esta semana",
                 style = TextStyle(
@@ -132,7 +139,10 @@ private fun ContenidoGrafico(
         Spacer(modifier = GlanceModifier.height(8.dp))
 
         if (habitos.isEmpty()) {
-            Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = GlanceModifier.fillMaxSize().clickable(abrirSeccion(Seccion.HABITOS)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
                     text = "Creá tus hábitos en la app",
                     style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp)
@@ -194,7 +204,7 @@ private fun EncabezadoDias(lunes: LocalDate, hoy: LocalDate) {
     }
 }
 
-// Un hábito: nombre, los 7 días de la semana y el porcentaje
+// Un hábito: nombre, los 7 días de la semana (se pueden tocar) y el porcentaje
 @Composable
 private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate, hoy: LocalDate) {
     val fraccion = habito.evolucionSemanal(hechos, hoy, semanas = 1).first().second
@@ -212,25 +222,39 @@ private fun FilaSemana(habito: Habito, hechos: Set<LocalDate>, lunes: LocalDate,
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
                 .cornerRadius(12.dp)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Nombre (abre la sección Progreso)
             Text(
                 text = habito.nombre,
                 maxLines = 1,
-                modifier = GlanceModifier.defaultWeight(),
+                modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PROGRESO)),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
             )
+            // Los 7 días
             for (i in 0L..6L) {
                 val dia = lunes.plusDays(i)
-                Box(
-                    modifier = GlanceModifier.width(26.dp).height(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                val hecho = dia in hechos
+                val sePuedeTocar = !dia.isAfter(hoy) && (habito.tocaEl(dia) || hecho)
+
+                var modificador = GlanceModifier.width(26.dp).height(32.dp)
+                if (sePuedeTocar) {
+                    modificador = modificador.clickable(
+                        actionRunCallback<AccionAlternarDiaHabito>(
+                            actionParametersOf(
+                                CLAVE_ID to habito.id,
+                                CLAVE_FECHA to dia.toEpochDay()
+                            )
+                        )
+                    )
+                }
+
+                Box(modifier = modificador, contentAlignment = Alignment.Center) {
                     Image(
                         provider = ImageProvider(iconoDia(habito, dia, hoy, hechos)),
                         contentDescription = null,
@@ -262,7 +286,7 @@ private fun iconoDia(habito: Habito, dia: LocalDate, hoy: LocalDate, hechos: Set
     else -> R.drawable.widget_dia_falto
 }
 
-// Calendario del mes: todos los hábitos combinados
+// Calendario del mes: todos los hábitos combinados (tocarlo abre Progreso)
 @Composable
 private fun CalendarioMes(
     hoy: LocalDate,
@@ -275,7 +299,12 @@ private fun CalendarioMes(
         .takeWhile { !it.isAfter(ultimo) }
         .toList()
 
-    Column(modifier = GlanceModifier.fillMaxWidth().padding(top = 12.dp)) {
+    Column(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .clickable(abrirSeccion(Seccion.PROGRESO))
+    ) {
         Text(
             text = primero.format(FORMATO_MES).replaceFirstChar { it.uppercase() },
             style = TextStyle(
@@ -419,6 +448,22 @@ private fun textoSemana(lunes: LocalDate): String {
         "${lunes.dayOfMonth} – ${domingo.format(FORMATO_DIA_MES)}"
     } else {
         "${lunes.format(FORMATO_DIA_MES)} – ${domingo.format(FORMATO_DIA_MES)}"
+    }
+}
+
+// Se ejecuta al tocar un día de la tabla: marca o desmarca ese hábito en ese día
+class AccionAlternarDiaHabito : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+        val id = parameters[CLAVE_ID] ?: return
+        val numeroDia = parameters[CLAVE_FECHA] ?: return
+        val dia = LocalDate.ofEpochDay(numeroDia)
+        if (dia.isAfter(LocalDate.now())) return // nunca días futuros
+
+        val dao = BaseDeDatos.obtener(context).habitoDao()
+        val registro = RegistroHabito(habitoId = id, fecha = dia)
+        val yaHecho = dao.registrosEntreLista(dia, dia).any { it.habitoId == id }
+        if (yaHecho) dao.desregistrar(registro) else dao.registrar(registro)
+        actualizarWidgets(context)
     }
 }
 
