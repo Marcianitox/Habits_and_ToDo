@@ -1,6 +1,8 @@
 # Habityx
 
 Aplicación Android para organizar la vida académica y personal en un solo lugar: **plan del día**, **deadlines** (exámenes y entregas), **hábitos** y **estadísticas de progreso**. Funciona 100 % sin conexión: todos los datos se guardan en el dispositivo.
+La diferencia con otras aplicaciones del estilo es que permite cargar deadlines (fechas de exámenes, tareas, etc) y armar un plan de estudio para cumplir esa deadline. Por ejemplo, permite cargar  "exámen de física el viernes" y luego "estudiar para [exámen de física]" los 3 días previos, teniendo un panorama tanto de las fechas de entrega como las acciones a tomar cada día.
+A su vez, incorpora también un tracker de hábitos, para poder tener todo organizado desde la misma aplicación.
 
 ## Funcionalidades
 
