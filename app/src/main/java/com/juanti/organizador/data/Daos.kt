@@ -33,7 +33,7 @@ interface DeadlineDao {
     @Query("SELECT * FROM deadlines WHERE id = :id")
     fun conPlan(id: Long): Flow<DeadlineConPlan?>
 
-    // Lectura puntual (para widgets)
+    // Lectura puntual
     @Query("SELECT * FROM deadlines WHERE completada = 0 AND fecha >= :desde ORDER BY fecha ASC LIMIT :limite")
     suspend fun proximas(desde: LocalDate, limite: Int): List<Deadline>
 
@@ -50,17 +50,23 @@ interface DeadlineDao {
 @Dao
 interface TareaPlanDao {
 
-    @Query("SELECT * FROM tareas_plan WHERE fecha = :fecha ORDER BY completada ASC, id ASC")
+    // Las consultas por fecha ignoran las tareas "sin fecha"
+
+    @Query("SELECT * FROM tareas_plan WHERE sinFecha = 0 AND fecha = :fecha ORDER BY completada ASC, id ASC")
     fun delDia(fecha: LocalDate): Flow<List<TareaPlan>>
 
-    @Query("SELECT * FROM tareas_plan WHERE fecha BETWEEN :desde AND :hasta ORDER BY fecha ASC, id ASC")
+    @Query("SELECT * FROM tareas_plan WHERE sinFecha = 0 AND fecha BETWEEN :desde AND :hasta ORDER BY fecha ASC, id ASC")
     fun entre(desde: LocalDate, hasta: LocalDate): Flow<List<TareaPlan>>
 
-    @Query("SELECT * FROM tareas_plan WHERE completada = 0 AND fecha < :hoy ORDER BY fecha ASC")
+    @Query("SELECT * FROM tareas_plan WHERE sinFecha = 0 AND completada = 0 AND fecha < :hoy ORDER BY fecha ASC")
     fun atrasadas(hoy: LocalDate): Flow<List<TareaPlan>>
 
-    // Lectura puntual (para widgets)
-    @Query("SELECT * FROM tareas_plan WHERE fecha = :fecha ORDER BY completada ASC, id ASC")
+    // Tareas sin fecha pendientes ("cuando pueda")
+    @Query("SELECT * FROM tareas_plan WHERE sinFecha = 1 AND completada = 0 ORDER BY id ASC")
+    fun sinFecha(): Flow<List<TareaPlan>>
+
+    // Lectura puntual
+    @Query("SELECT * FROM tareas_plan WHERE sinFecha = 0 AND fecha = :fecha ORDER BY completada ASC, id ASC")
     suspend fun delDiaLista(fecha: LocalDate): List<TareaPlan>
 
     @Query("UPDATE tareas_plan SET completada = :completada WHERE id = :id")

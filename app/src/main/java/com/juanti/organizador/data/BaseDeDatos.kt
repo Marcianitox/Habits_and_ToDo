@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Deadline::class, TareaPlan::class, Habito::class, RegistroHabito::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Convertidores::class)
@@ -24,12 +24,18 @@ abstract class BaseDeDatos : RoomDatabase() {
         @Volatile
         private var instancia: BaseDeDatos? = null
 
-        // Versión 1 → 2: se agregan los recordatorios a las deadlines.
-        // Las deadlines existentes quedan sin recordatorios y con hora 20:00.
+        // Versión 1 → 2: recordatorios en las deadlines
         private val MIGRACION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `deadlines` ADD COLUMN `recordatorios` TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE `deadlines` ADD COLUMN `horaRecordatorio` INTEGER NOT NULL DEFAULT 1200")
+            }
+        }
+
+        // Versión 2 → 3: tareas sin fecha. Las existentes quedan con fecha.
+        private val MIGRACION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `tareas_plan` ADD COLUMN `sinFecha` INTEGER NOT NULL DEFAULT 0")
             }
         }
 
@@ -41,7 +47,7 @@ abstract class BaseDeDatos : RoomDatabase() {
                     BaseDeDatos::class.java,
                     "organizador.db"
                 )
-                    .addMigrations(MIGRACION_1_2)
+                    .addMigrations(MIGRACION_1_2, MIGRACION_2_3)
                     .build()
                     .also { instancia = it }
             }

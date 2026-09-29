@@ -63,9 +63,11 @@ fun PantallaPlan() {
 
     val flujoTareas = remember { bd.tareaPlanDao().entre(hoy, hasta) }
     val flujoAtrasadas = remember { bd.tareaPlanDao().atrasadas(hoy) }
+    val flujoSinFecha = remember { bd.tareaPlanDao().sinFecha() }
     val flujoDeadlines = remember { bd.deadlineDao().todas() }
     val tareas by flujoTareas.collectAsState(initial = emptyList())
     val atrasadas by flujoAtrasadas.collectAsState(initial = emptyList())
+    val sinFecha by flujoSinFecha.collectAsState(initial = emptyList())
     val deadlines by flujoDeadlines.collectAsState(initial = emptyList())
 
     val scope = rememberCoroutineScope()
@@ -103,8 +105,9 @@ fun PantallaPlan() {
         actualizarWidgets(context)
     }
 
+    // Sirve para las atrasadas y para las sin fecha: les asigna el día de hoy
     fun pasarAHoy(t: TareaPlan) = scope.launch {
-        bd.tareaPlanDao().actualizar(t.copy(fecha = hoy))
+        bd.tareaPlanDao().actualizar(t.copy(fecha = hoy, sinFecha = false))
         actualizarWidgets(context)
     }
 
@@ -177,6 +180,34 @@ fun PantallaPlan() {
                 }
             }
 
+            // Tareas sin fecha
+            if (sinFecha.isNotEmpty()) {
+                item(key = "sin-fecha") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        EncabezadoDia(
+                            titulo = "Sin fecha",
+                            detalle = "${sinFecha.size} pendientes",
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Grupo {
+                            sinFecha.forEachIndexed { i, t ->
+                                if (i > 0) Divisor()
+                                FilaTareaPlan(
+                                    tarea = t,
+                                    deadline = null,
+                                    atrasada = false,
+                                    hoy = hoy,
+                                    onCompletar = { completar(t) },
+                                    onEditar = { tareaEditando = t },
+                                    onBorrar = { borrar(t) },
+                                    onPasarAHoy = { pasarAHoy(t) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             item(key = "pie") {
                 Text(
                     text = "Se muestran los próximos $DIAS_VISIBLES días. Tocá una tarea para editarla.",
@@ -215,7 +246,8 @@ fun PantallaPlan() {
                     actualizarWidgets(context)
                 }
                 mostrandoNueva = false
-            }
+            },
+            permitirSinFecha = true
         )
     }
 
@@ -230,7 +262,8 @@ fun PantallaPlan() {
                     actualizarWidgets(context)
                 }
                 tareaEditando = null
-            }
+            },
+            permitirSinFecha = true
         )
     }
 }

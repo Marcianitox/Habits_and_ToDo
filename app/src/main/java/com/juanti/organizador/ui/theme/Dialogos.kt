@@ -6,6 +6,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -15,6 +17,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
@@ -25,6 +28,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.juanti.organizador.data.Deadline
@@ -177,17 +181,20 @@ private fun SelectorHora(minutos: Int, onCambio: (Int) -> Unit) {
 }
 
 // Crear (inicial = null) o editar una tarea del plan.
-// Si "deadlines" no está vacía, se puede elegir a cuál vincularla.
+// - "deadlines": si no está vacía, se puede elegir a cuál vincularla.
+// - "permitirSinFecha": muestra el interruptor "Sin fecha" (solo en Plan).
 @Composable
 fun DialogoTarea(
     inicial: TareaPlan?,
     deadlines: List<Deadline>,
     onCancelar: () -> Unit,
-    onGuardar: (TareaPlan) -> Unit
+    onGuardar: (TareaPlan) -> Unit,
+    permitirSinFecha: Boolean = false
 ) {
     var titulo by remember { mutableStateOf(inicial?.titulo ?: "") }
     var fecha by remember { mutableStateOf(inicial?.fecha ?: LocalDate.now()) }
     var deadlineId by remember { mutableStateOf(inicial?.deadlineId) }
+    var sinFecha by remember { mutableStateOf(inicial?.sinFecha ?: false) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
@@ -199,9 +206,32 @@ fun DialogoTarea(
                     onValueChange = { titulo = it },
                     label = { Text("Qué tenés que hacer") }
                 )
-                SelectorFecha(fecha = fecha, onCambio = { fecha = it })
 
-                if (deadlines.isNotEmpty()) {
+                if (permitirSinFecha) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Switch(checked = sinFecha, onCheckedChange = { sinFecha = it })
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Sin fecha",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                if (!sinFecha) {
+                    SelectorFecha(fecha = fecha, onCambio = { fecha = it })
+                }
+
+                if (sinFecha && inicial?.deadlineId != null) {
+                    Text(
+                        text = "Las tareas sin fecha no se vinculan a deadlines: se va a desvincular.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                if (!sinFecha && deadlines.isNotEmpty()) {
                     Text(
                         text = "Vincular a una deadline (opcional)",
                         style = MaterialTheme.typography.labelMedium,
@@ -232,7 +262,14 @@ fun DialogoTarea(
                 enabled = titulo.isNotBlank(),
                 onClick = {
                     val base = inicial ?: TareaPlan(titulo = "", fecha = fecha)
-                    onGuardar(base.copy(titulo = titulo.trim(), fecha = fecha, deadlineId = deadlineId))
+                    onGuardar(
+                        base.copy(
+                            titulo = titulo.trim(),
+                            fecha = fecha,
+                            deadlineId = if (sinFecha) null else deadlineId,
+                            sinFecha = sinFecha
+                        )
+                    )
                 }
             ) { Text("Guardar") }
         },

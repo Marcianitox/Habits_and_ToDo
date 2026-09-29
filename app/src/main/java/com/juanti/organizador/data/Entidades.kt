@@ -47,7 +47,10 @@ data class TareaPlan(
     val titulo: String,
     val fecha: LocalDate,
     val deadlineId: Long? = null,
-    val completada: Boolean = false
+    val completada: Boolean = false,
+    // Tarea sin día asignado ("cuando pueda"). Mientras sea true, la fecha no se usa.
+    @ColumnInfo(defaultValue = "0")
+    val sinFecha: Boolean = false
 )
 
 // ---------- HÁBITOS ----------
