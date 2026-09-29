@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -62,13 +61,19 @@ enum class VistaCalendario(val etiqueta: String) {
     MES("Mes")
 }
 
+// Calendario de un hábito en la vista indicada (semana o mes).
+// Se puede navegar con las flechas y tocar los días para marcarlos.
 @Composable
-fun CalendarioHabito(habito: Habito, hechos: Set<LocalDate>, hoy: LocalDate) {
+fun CalendarioHabito(
+    habito: Habito,
+    hechos: Set<LocalDate>,
+    hoy: LocalDate,
+    vista: VistaCalendario
+) {
     val context = LocalContext.current
     val dao = remember { BaseDeDatos.obtener(context).habitoDao() }
     val scope = rememberCoroutineScope()
 
-    var vista by rememberSaveable { mutableStateOf(VistaCalendario.SEMANA) }
     var lunes by rememberSaveable { mutableStateOf(inicioDeSemana(hoy)) }
     var primeroDeMes by rememberSaveable { mutableStateOf(hoy.withDayOfMonth(1)) }
 
@@ -96,22 +101,7 @@ fun CalendarioHabito(habito: Habito, hechos: Set<LocalDate>, hoy: LocalDate) {
         .takeWhile { !it.isAfter(hasta) }
         .toList()
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Título + selector Semana | Mes
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Calendario",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-            SelectorSegmentado(
-                opciones = VistaCalendario.entries.map { it.etiqueta },
-                seleccion = vista.ordinal,
-                onSeleccion = { vista = VistaCalendario.entries[it] },
-                modifier = Modifier.width(180.dp)
-            )
-        }
-
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Navegación ‹ período ›
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
