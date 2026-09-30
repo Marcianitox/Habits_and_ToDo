@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Deadline::class, TareaPlan::class, Habito::class, RegistroHabito::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Convertidores::class)
@@ -39,6 +39,13 @@ abstract class BaseDeDatos : RoomDatabase() {
             }
         }
 
+        // Versión 3 → 4: descripción en las tareas. Las existentes quedan sin descripción.
+        private val MIGRACION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `tareas_plan` ADD COLUMN `descripcion` TEXT")
+            }
+        }
+
         // Devuelve siempre la misma base de datos, la pida la app o un widget
         fun obtener(context: Context): BaseDeDatos =
             instancia ?: synchronized(this) {
@@ -47,7 +54,7 @@ abstract class BaseDeDatos : RoomDatabase() {
                     BaseDeDatos::class.java,
                     "organizador.db"
                 )
-                    .addMigrations(MIGRACION_1_2, MIGRACION_2_3)
+                    .addMigrations(MIGRACION_1_2, MIGRACION_2_3, MIGRACION_3_4)
                     .build()
                     .also { instancia = it }
             }

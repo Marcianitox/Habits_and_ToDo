@@ -50,7 +50,9 @@ data class TareaPlan(
     val completada: Boolean = false,
     // Tarea sin día asignado ("cuando pueda"). Mientras sea true, la fecha no se usa.
     @ColumnInfo(defaultValue = "0")
-    val sinFecha: Boolean = false
+    val sinFecha: Boolean = false,
+    // Descripción opcional (ej: la lista de compras). null = sin descripción
+    val descripcion: String? = null
 )
 
 // ---------- HÁBITOS ----------

@@ -135,7 +135,7 @@ private fun ContenidoPlan(
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(12.dp)
+            .padding(10.dp)
     ) {
         // Encabezado: ‹  día  ›  +
         Row(
@@ -156,7 +156,7 @@ private fun ContenidoPlan(
                     text = tituloDia(dia, hoy),
                     style = TextStyle(
                         color = GlanceTheme.colors.primary,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
@@ -179,8 +179,8 @@ private fun ContenidoPlan(
             Spacer(modifier = GlanceModifier.width(6.dp))
             Box(
                 modifier = GlanceModifier
-                    .size(34.dp)
-                    .cornerRadius(17.dp)
+                    .size(30.dp)
+                    .cornerRadius(15.dp)
                     .background(GlanceTheme.colors.primary)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
@@ -192,13 +192,13 @@ private fun ContenidoPlan(
                 Image(
                     provider = ImageProvider(R.drawable.ic_agregar),
                     contentDescription = "Agregar tarea",
-                    modifier = GlanceModifier.size(20.dp),
+                    modifier = GlanceModifier.size(18.dp),
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
                 )
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(6.dp))
+        Spacer(modifier = GlanceModifier.height(4.dp))
 
         LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
             // Atrasadas (solo en "Hoy")
@@ -232,7 +232,7 @@ private fun ContenidoPlan(
                         },
                         modifier = GlanceModifier
                             .fillMaxWidth()
-                            .padding(vertical = 12.dp)
+                            .padding(vertical = 8.dp)
                             .clickable(abrirSeccion(Seccion.PLAN)),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
@@ -248,7 +248,7 @@ private fun ContenidoPlan(
                 item(itemId = Long.MAX_VALUE - 1) {
                     Text(
                         text = "Sin fecha",
-                        modifier = GlanceModifier.padding(start = 4.dp, top = 10.dp, bottom = 6.dp),
+                        modifier = GlanceModifier.padding(start = 4.dp, top = 6.dp, bottom = 4.dp),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
                             fontSize = 13.sp,
@@ -271,8 +271,8 @@ private fun BotonFlecha(icono: Int, descripcion: String, habilitado: Boolean, pa
     // Capa de afuera: el círculo de fondo
     Box(
         modifier = GlanceModifier
-            .size(36.dp)
-            .cornerRadius(18.dp)
+            .size(32.dp)
+            .cornerRadius(16.dp)
             .background(GlanceTheme.colors.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
@@ -288,7 +288,7 @@ private fun BotonFlecha(icono: Int, descripcion: String, habilitado: Boolean, pa
             Image(
                 provider = ImageProvider(icono),
                 contentDescription = descripcion,
-                modifier = GlanceModifier.size(22.dp),
+                modifier = GlanceModifier.size(20.dp),
                 colorFilter = ColorFilter.tint(
                     if (habilitado) GlanceTheme.colors.onSurface else GlanceTheme.colors.outline
                 )
@@ -310,21 +310,22 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
         if (atrasada) add(textoDiasRestantes(tarea.fecha, hoy))
         if (deadline != null) add("⚑ ${deadline.titulo}")
     }.joinToString("   ")
+    val tieneDescripcion = !tarea.descripcion.isNullOrBlank()
 
     // Column exterior = separación entre filas
-    Column(modifier = GlanceModifier.fillMaxWidth().padding(bottom = 6.dp)) {
+    Column(modifier = GlanceModifier.fillMaxWidth().padding(bottom = 4.dp)) {
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
-                .cornerRadius(16.dp)
-                .padding(horizontal = 4.dp, vertical = 4.dp),
+                .cornerRadius(14.dp)
+                .padding(start = 2.dp, top = 2.dp, end = 8.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Casilla (zona táctil de 44dp)
+            // Casilla (zona táctil de 38dp)
             Box(
                 modifier = GlanceModifier
-                    .size(44.dp)
+                    .size(38.dp)
                     .clickable(
                         actionRunCallback<AccionCompletarTarea>(
                             actionParametersOf(CLAVE_ID to tarea.id)
@@ -332,28 +333,43 @@ private fun FilaTareaWidget(tarea: TareaPlan, deadline: Deadline?, atrasada: Boo
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                CasillaWidget(marcada = false, tamano = 30.dp)
+                CasillaWidget(marcada = false, tamano = 26.dp)
             }
-            Spacer(modifier = GlanceModifier.width(4.dp))
+            Spacer(modifier = GlanceModifier.width(2.dp))
             // Texto (abre la sección Plan)
-            Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PLAN))) {
-                Text(
-                    text = tarea.titulo,
-                    maxLines = 2,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-                if (detalle.isNotEmpty()) {
+            Row(
+                modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.PLAN)),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = detalle,
-                        maxLines = 1,
+                        text = tarea.titulo,
+                        maxLines = 2,
                         style = TextStyle(
-                            color = if (atrasada) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 12.sp
+                            color = GlanceTheme.colors.onSurface,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
                         )
+                    )
+                    if (detalle.isNotEmpty()) {
+                        Text(
+                            text = detalle,
+                            maxLines = 1,
+                            style = TextStyle(
+                                color = if (atrasada) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+                // Marca de "tiene descripción"
+                if (tieneDescripcion) {
+                    Spacer(modifier = GlanceModifier.width(6.dp))
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_descripcion),
+                        contentDescription = "Tiene descripción",
+                        modifier = GlanceModifier.size(14.dp),
+                        colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
                     )
                 }
             }

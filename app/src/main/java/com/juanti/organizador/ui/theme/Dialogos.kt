@@ -195,16 +195,27 @@ fun DialogoTarea(
     var fecha by remember { mutableStateOf(inicial?.fecha ?: LocalDate.now()) }
     var deadlineId by remember { mutableStateOf(inicial?.deadlineId) }
     var sinFecha by remember { mutableStateOf(inicial?.sinFecha ?: false) }
+    var descripcion by remember { mutableStateOf(inicial?.descripcion ?: "") }
 
     AlertDialog(
         onDismissRequest = onCancelar,
         title = { Text(if (inicial == null) "Nueva tarea" else "Editar tarea") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
                 OutlinedTextField(
                     value = titulo,
                     onValueChange = { titulo = it },
                     label = { Text("Qué tenés que hacer") }
+                )
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción (opcional)") },
+                    minLines = 2,
+                    maxLines = 6
                 )
 
                 if (permitirSinFecha) {
@@ -267,7 +278,8 @@ fun DialogoTarea(
                             titulo = titulo.trim(),
                             fecha = fecha,
                             deadlineId = if (sinFecha) null else deadlineId,
-                            sinFecha = sinFecha
+                            sinFecha = sinFecha,
+                            descripcion = descripcion.trim().ifBlank { null }
                         )
                     )
                 }

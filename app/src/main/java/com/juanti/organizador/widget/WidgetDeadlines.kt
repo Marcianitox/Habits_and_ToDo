@@ -87,7 +87,7 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
             .cornerRadius(24.dp)
-            .padding(12.dp)
+            .padding(10.dp)
     ) {
         // Encabezado compacto (abre la sección Deadlines) + botón +
         Row(
@@ -99,7 +99,7 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
                     text = "Deadlines",
                     style = TextStyle(
                         color = GlanceTheme.colors.primary,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -113,8 +113,8 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
             }
             Box(
                 modifier = GlanceModifier
-                    .size(34.dp)
-                    .cornerRadius(17.dp)
+                    .size(30.dp)
+                    .cornerRadius(15.dp)
                     .background(GlanceTheme.colors.primary)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
@@ -126,13 +126,13 @@ private fun ContenidoDeadlines(hoy: LocalDate, deadlines: List<DeadlineConPlan>)
                 Image(
                     provider = ImageProvider(R.drawable.ic_agregar),
                     contentDescription = "Agregar deadline",
-                    modifier = GlanceModifier.size(20.dp),
+                    modifier = GlanceModifier.size(18.dp),
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
                 )
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(6.dp))
+        Spacer(modifier = GlanceModifier.height(4.dp))
 
         if (deadlines.isEmpty()) {
             Box(
@@ -174,21 +174,23 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
         listOfNotNull(nombreTipo(d.tipo), d.materia?.takeIf { it.isNotBlank() }).joinToString(" · ")
     }
 
+    val textoSesiones = if (total == 0) "Sin plan" else "$hechas/$total sesiones"
+
     // Column exterior = separación entre filas
-    Column(modifier = GlanceModifier.fillMaxWidth().padding(bottom = 6.dp)) {
+    Column(modifier = GlanceModifier.fillMaxWidth().padding(bottom = 4.dp)) {
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
                 .background(GlanceTheme.colors.surfaceVariant)
-                .cornerRadius(16.dp)
-                .padding(start = 8.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
+                .cornerRadius(14.dp)
+                .padding(start = 6.dp, top = 5.dp, end = 2.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Cuenta regresiva
             Column(
                 modifier = GlanceModifier
-                    .size(46.dp)
-                    .cornerRadius(12.dp)
+                    .size(40.dp)
+                    .cornerRadius(10.dp)
                     .background(fondoCuenta),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
@@ -198,7 +200,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                         text = "!",
                         style = TextStyle(
                             color = GlanceTheme.colors.onErrorContainer,
-                            fontSize = 20.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -206,7 +208,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                         text = "Hoy",
                         style = TextStyle(
                             color = GlanceTheme.colors.primary,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -215,53 +217,58 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                             text = "$dias",
                             style = TextStyle(
                                 color = if (urgente) GlanceTheme.colors.primary else GlanceTheme.colors.onSurface,
-                                fontSize = 18.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
                         Text(
                             text = if (dias == 1L) "día" else "días",
-                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp)
+                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = GlanceModifier.width(10.dp))
+            Spacer(modifier = GlanceModifier.width(8.dp))
 
-            // Datos (abren la sección Deadlines)
+            // Datos en dos líneas (abren la sección Deadlines)
             Column(modifier = GlanceModifier.defaultWeight().clickable(abrirSeccion(Seccion.DEADLINES))) {
                 Text(
                     text = d.titulo,
                     maxLines = 1,
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurface,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
-                Text(
-                    text = lineaTipo,
-                    maxLines = 1,
-                    style = TextStyle(
-                        color = if (vencida) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 12.sp
+                // Tipo y materia a la izquierda, sesiones a la derecha
+                Row(modifier = GlanceModifier.fillMaxWidth()) {
+                    Text(
+                        text = lineaTipo,
+                        maxLines = 1,
+                        modifier = GlanceModifier.defaultWeight(),
+                        style = TextStyle(
+                            color = if (vencida) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 11.sp
+                        )
                     )
-                )
-                Text(
-                    text = if (total == 0) "Sin plan de acción" else "$hechas/$total sesiones",
-                    maxLines = 1,
-                    style = TextStyle(
-                        color = if (total == 0) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.tertiary,
-                        fontSize = 12.sp
+                    Spacer(modifier = GlanceModifier.width(6.dp))
+                    Text(
+                        text = textoSesiones,
+                        maxLines = 1,
+                        style = TextStyle(
+                            color = if (total == 0) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.tertiary,
+                            fontSize = 11.sp
+                        )
                     )
-                )
+                }
             }
 
-            // Completar (abre una confirmación) — zona táctil de 44dp
+            // Completar (abre una confirmación) — zona táctil de 38dp
             Box(
                 modifier = GlanceModifier
-                    .size(44.dp)
+                    .size(38.dp)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
                             actionParametersOf(
@@ -272,7 +279,7 @@ private fun FilaDeadlineWidget(item: DeadlineConPlan, hoy: LocalDate) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                CasillaWidget(marcada = false, tamano = 30.dp)
+                CasillaWidget(marcada = false, tamano = 26.dp)
             }
         }
     }

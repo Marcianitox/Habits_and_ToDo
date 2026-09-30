@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -98,18 +99,29 @@ private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Un
     var titulo by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(hoy) }
     var deadlineId by remember { mutableStateOf<Long?>(null) }
+    var descripcion by remember { mutableStateOf("") }
     val foco = remember { FocusRequester() }
 
     AlertDialog(
         onDismissRequest = onCancelar,
         title = { Text("Nueva tarea") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
                 OutlinedTextField(
                     value = titulo,
                     onValueChange = { titulo = it },
                     label = { Text("Qué tenés que hacer") },
                     modifier = Modifier.focusRequester(foco)
+                )
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción (opcional)") },
+                    minLines = 2,
+                    maxLines = 6
                 )
                 // Abre el teclado directamente
                 LaunchedEffect(Unit) {
@@ -149,7 +161,14 @@ private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Un
             Button(
                 enabled = titulo.isNotBlank(),
                 onClick = {
-                    onGuardar(TareaPlan(titulo = titulo.trim(), fecha = fecha, deadlineId = deadlineId))
+                    onGuardar(
+                        TareaPlan(
+                            titulo = titulo.trim(),
+                            fecha = fecha,
+                            deadlineId = deadlineId,
+                            descripcion = descripcion.trim().ifBlank { null }
+                        )
+                    )
                 }
             ) { Text("Guardar") }
         },

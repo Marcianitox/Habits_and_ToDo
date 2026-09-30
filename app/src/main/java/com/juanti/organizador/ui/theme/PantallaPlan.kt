@@ -2,6 +2,7 @@
 
 package com.juanti.organizador.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -75,6 +78,12 @@ fun PantallaPlan() {
     var mostrandoNueva by remember { mutableStateOf(false) }
     var tareaEditando by remember { mutableStateOf<TareaPlan?>(null) }
 
+    // Tareas con la descripción desplegada
+    var expandidas by remember { mutableStateOf(setOf<Long>()) }
+    fun alternarDescripcion(t: TareaPlan) {
+        expandidas = if (t.id in expandidas) expandidas - t.id else expandidas + t.id
+    }
+
     val deadlinePorId = deadlines.associateBy { it.id }
     // Deadlines a las que se puede vincular una tarea: pendientes y no vencidas
     val deadlinesVinculables = deadlines.filter { !it.completada && !it.fecha.isBefore(hoy) }
@@ -132,8 +141,10 @@ fun PantallaPlan() {
                                     deadline = t.deadlineId?.let { deadlinePorId[it] },
                                     atrasada = true,
                                     hoy = hoy,
+                                    expandida = t.id in expandidas,
                                     onCompletar = { completar(t) },
                                     onEditar = { tareaEditando = t },
+                                    onAlternarDescripcion = { alternarDescripcion(t) },
                                     onBorrar = { borrar(t) },
                                     onPasarAHoy = { pasarAHoy(t) }
                                 )
@@ -169,8 +180,10 @@ fun PantallaPlan() {
                                     deadline = t.deadlineId?.let { deadlinePorId[it] },
                                     atrasada = false,
                                     hoy = hoy,
+                                    expandida = t.id in expandidas,
                                     onCompletar = { completar(t) },
                                     onEditar = { tareaEditando = t },
+                                    onAlternarDescripcion = { alternarDescripcion(t) },
                                     onBorrar = { borrar(t) },
                                     onPasarAHoy = null
                                 )
@@ -197,8 +210,10 @@ fun PantallaPlan() {
                                     deadline = null,
                                     atrasada = false,
                                     hoy = hoy,
+                                    expandida = t.id in expandidas,
                                     onCompletar = { completar(t) },
                                     onEditar = { tareaEditando = t },
+                                    onAlternarDescripcion = { alternarDescripcion(t) },
                                     onBorrar = { borrar(t) },
                                     onPasarAHoy = { pasarAHoy(t) }
                                 )
@@ -210,7 +225,7 @@ fun PantallaPlan() {
 
             item(key = "pie") {
                 Text(
-                    text = "Se muestran los próximos $DIAS_VISIBLES días. Tocá una tarea para editarla.",
+                    text = "Se muestran los próximos $DIAS_VISIBLES días. Tocá una tarea para editarla o ver su descripción.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
@@ -306,77 +321,127 @@ private fun FilaTareaPlan(
     deadline: Deadline?,
     atrasada: Boolean,
     hoy: LocalDate,
+    expandida: Boolean,
     onCompletar: () -> Unit,
     onEditar: () -> Unit,
+    onAlternarDescripcion: () -> Unit,
     onBorrar: () -> Unit,
     onPasarAHoy: (() -> Unit)?
 ) {
-    Row(
-        modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        CasillaRedonda(marcada = false, onCambio = onCompletar)
+    val descripcion = tarea.descripcion?.takeIf { it.isNotBlank() }
 
-        // Tocar el texto abre la edición
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onEditar)
-                .padding(vertical = 4.dp)
+    Column(modifier = Modifier.animateContentSize()) {
+        Row(
+            modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = tarea.titulo, style = MaterialTheme.typography.bodyLarge)
+            CasillaRedonda(marcada = false, onCambio = onCompletar)
 
-            if (atrasada || deadline != null) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    if (atrasada) {
-                        Etiqueta(
-                            texto = textoDiasRestantes(tarea.fecha, hoy),
-                            fondo = MaterialTheme.colorScheme.errorContainer,
-                            colorTexto = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                    if (deadline != null) {
-                        Etiqueta(
-                            texto = deadline.titulo,
-                            fondo = MaterialTheme.colorScheme.primaryContainer,
-                            colorTexto = MaterialTheme.colorScheme.onPrimaryContainer,
-                            icono = R.drawable.ic_deadlines,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                        Text(
-                            text = textoDiasRestantes(deadline.fecha, hoy).lowercase(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+            // Tocar el texto: si tiene descripción la despliega, si no abre la edición
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = if (descripcion != null) onAlternarDescripcion else onEditar)
+                    .padding(vertical = 4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = tarea.titulo,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    // Marca de "tiene descripción"
+                    if (descripcion != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.ic_descripcion),
+                            contentDescription = "Tiene descripción",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
+
+                if (atrasada || deadline != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        if (atrasada) {
+                            Etiqueta(
+                                texto = textoDiasRestantes(tarea.fecha, hoy),
+                                fondo = MaterialTheme.colorScheme.errorContainer,
+                                colorTexto = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                        if (deadline != null) {
+                            Etiqueta(
+                                texto = deadline.titulo,
+                                fondo = MaterialTheme.colorScheme.primaryContainer,
+                                colorTexto = MaterialTheme.colorScheme.onPrimaryContainer,
+                                icono = R.drawable.ic_deadlines,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Text(
+                                text = textoDiasRestantes(deadline.fecha, hoy).lowercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (onPasarAHoy != null) {
+                TextButton(
+                    onClick = onPasarAHoy,
+                    contentPadding = PaddingValues(horizontal = 10.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_hoy),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Hoy")
+                }
+            }
+            IconButton(onClick = onBorrar) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_borrar),
+                    contentDescription = "Borrar",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 
-        if (onPasarAHoy != null) {
-            TextButton(
-                onClick = onPasarAHoy,
-                contentPadding = PaddingValues(horizontal = 10.dp)
+        // Descripción desplegada, alineada con el título
+        if (expandida && descripcion != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_hoy),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = descripcion,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Hoy")
+                TextButton(
+                    onClick = onEditar,
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    modifier = Modifier.offset(x = (-8).dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_editar),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Editar")
+                }
             }
-        }
-        IconButton(onClick = onBorrar) {
-            Icon(
-                painter = painterResource(R.drawable.ic_borrar),
-                contentDescription = "Borrar",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
