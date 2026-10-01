@@ -262,7 +262,14 @@ fun PantallaPlan() {
                 }
                 mostrandoNueva = false
             },
-            permitirSinFecha = true
+            permitirSinFecha = true,
+            onGuardarVarias = { nuevas ->
+                scope.launch {
+                    nuevas.forEach { bd.tareaPlanDao().insertar(it) }
+                    actualizarWidgets(context)
+                }
+                mostrandoNueva = false
+            }
         )
     }
 

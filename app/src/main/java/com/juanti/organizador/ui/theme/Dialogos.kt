@@ -189,13 +189,19 @@ fun DialogoTarea(
     deadlines: List<Deadline>,
     onCancelar: () -> Unit,
     onGuardar: (TareaPlan) -> Unit,
-    permitirSinFecha: Boolean = false
+    permitirSinFecha: Boolean = false,
+    // Si se pasa, al crear una tarea se pueden marcar varios días en el calendario (una copia por día)
+    onGuardarVarias: ((List<TareaPlan>) -> Unit)? = null
 ) {
     var titulo by remember { mutableStateOf(inicial?.titulo ?: "") }
     var fecha by remember { mutableStateOf(inicial?.fecha ?: LocalDate.now()) }
     var deadlineId by remember { mutableStateOf(inicial?.deadlineId) }
     var sinFecha by remember { mutableStateOf(inicial?.sinFecha ?: false) }
     var descripcion by remember { mutableStateOf(inicial?.descripcion ?: "") }
+    var fechas by remember { mutableStateOf(setOf(LocalDate.now())) }
+
+    // Al crear (y si la pantalla lo permite) se pueden elegir varios días
+    val variasFechas = inicial == null && onGuardarVarias != null
 
     AlertDialog(
         onDismissRequest = onCancelar,
@@ -231,7 +237,11 @@ fun DialogoTarea(
                 }
 
                 if (!sinFecha) {
-                    SelectorFecha(fecha = fecha, onCambio = { fecha = it })
+                    if (variasFechas) {
+                        SelectorFechas(fechas = fechas, onCambio = { fechas = it })
+                    } else {
+                        SelectorFecha(fecha = fecha, onCambio = { fecha = it })
+                    }
                 }
 
                 if (sinFecha && inicial?.deadlineId != null) {
@@ -270,18 +280,23 @@ fun DialogoTarea(
         },
         confirmButton = {
             Button(
-                enabled = titulo.isNotBlank(),
+                enabled = titulo.isNotBlank() && (sinFecha || !variasFechas || fechas.isNotEmpty()),
                 onClick = {
                     val base = inicial ?: TareaPlan(titulo = "", fecha = fecha)
-                    onGuardar(
-                        base.copy(
-                            titulo = titulo.trim(),
-                            fecha = fecha,
-                            deadlineId = if (sinFecha) null else deadlineId,
-                            sinFecha = sinFecha,
-                            descripcion = descripcion.trim().ifBlank { null }
-                        )
+                    val tarea = base.copy(
+                        titulo = titulo.trim(),
+                        fecha = fecha,
+                        deadlineId = if (sinFecha) null else deadlineId,
+                        sinFecha = sinFecha,
+                        descripcion = descripcion.trim().ifBlank { null }
                     )
+                    val guardarVarias = onGuardarVarias
+                    if (guardarVarias != null && variasFechas && !sinFecha) {
+                        // Una copia independiente por cada día elegido
+                        guardarVarias(fechas.sorted().map { tarea.copy(fecha = it) })
+                    } else {
+                        onGuardar(tarea)
+                    }
                 }
             ) { Text("Guardar") }
         },

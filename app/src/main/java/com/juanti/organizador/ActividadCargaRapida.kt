@@ -37,7 +37,7 @@ import com.juanti.organizador.data.BaseDeDatos
 import com.juanti.organizador.data.Deadline
 import com.juanti.organizador.data.TareaPlan
 import com.juanti.organizador.ui.DialogoDeadline
-import com.juanti.organizador.ui.SelectorFecha
+import com.juanti.organizador.ui.SelectorFechas
 import com.juanti.organizador.ui.theme.HabitsAndToDoTheme
 import com.juanti.organizador.widget.TIPO_COMPLETAR_DEADLINE
 import com.juanti.organizador.widget.TIPO_DEADLINE
@@ -72,7 +72,9 @@ class ActividadCargaRapida : ComponentActivity() {
                     )
                     else -> FormularioTarea(
                         onCancelar = { finish() },
-                        onGuardar = { t -> guardar { it.tareaPlanDao().insertar(t) } }
+                        onGuardar = { tareas ->
+                            guardar { bd -> tareas.forEach { bd.tareaPlanDao().insertar(it) } }
+                        }
                     )
                 }
             }
@@ -90,14 +92,14 @@ class ActividadCargaRapida : ComponentActivity() {
 }
 
 @Composable
-private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Unit) {
+private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (List<TareaPlan>) -> Unit) {
     val context = LocalContext.current
     val hoy = remember { LocalDate.now() }
     val flujo = remember { BaseDeDatos.obtener(context).deadlineDao().pendientesConPlan(hoy) }
     val deadlines by flujo.collectAsState(initial = emptyList())
 
     var titulo by remember { mutableStateOf("") }
-    var fecha by remember { mutableStateOf(hoy) }
+    var fechas by remember { mutableStateOf(setOf(hoy)) }
     var deadlineId by remember { mutableStateOf<Long?>(null) }
     var descripcion by remember { mutableStateOf("") }
     val foco = remember { FocusRequester() }
@@ -128,7 +130,7 @@ private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Un
                     delay(150)
                     runCatching { foco.requestFocus() }
                 }
-                SelectorFecha(fecha = fecha, onCambio = { fecha = it })
+                SelectorFechas(fechas = fechas, onCambio = { fechas = it })
 
                 if (deadlines.isNotEmpty()) {
                     Text(
@@ -159,15 +161,18 @@ private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (TareaPlan) -> Un
         },
         confirmButton = {
             Button(
-                enabled = titulo.isNotBlank(),
+                enabled = titulo.isNotBlank() && fechas.isNotEmpty(),
                 onClick = {
+                    // Una tarea independiente por cada día elegido
                     onGuardar(
-                        TareaPlan(
-                            titulo = titulo.trim(),
-                            fecha = fecha,
-                            deadlineId = deadlineId,
-                            descripcion = descripcion.trim().ifBlank { null }
-                        )
+                        fechas.sorted().map { dia ->
+                            TareaPlan(
+                                titulo = titulo.trim(),
+                                fecha = dia,
+                                deadlineId = deadlineId,
+                                descripcion = descripcion.trim().ifBlank { null }
+                            )
+                        }
                     )
                 }
             ) { Text("Guardar") }
