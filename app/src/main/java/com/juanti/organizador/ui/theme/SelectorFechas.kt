@@ -2,7 +2,7 @@ package com.juanti.organizador.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,7 +50,7 @@ private val FORMATO_MES = DateTimeFormatter.ofPattern("MMMM yyyy", ES)
 private val FORMATO_DIA_CORTO = DateTimeFormatter.ofPattern("EEE d", ES)
 
 // Botón que muestra los días elegidos y, al tocarlo, abre un calendario
-// donde se pueden marcar varios días
+// donde se pueden marcar varios días (manteniendo apretado un segundo día)
 @Composable
 fun SelectorFechas(
     fechas: Set<LocalDate>,
@@ -154,9 +154,8 @@ private fun DialogoCalendarioVarios(
                                     visible = !dia.isBefore(primeroDeMes) && !dia.isAfter(ultimoDeMes),
                                     elegido = dia in seleccion,
                                     esHoy = dia == hoy,
-                                    onTocar = {
-                                        seleccion = if (dia in seleccion) seleccion - dia else seleccion + dia
-                                    },
+                                    onTocar = { seleccion = alTocar(seleccion, dia) },
+                                    onMantener = { seleccion = alMantener(seleccion, dia) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -166,8 +165,8 @@ private fun DialogoCalendarioVarios(
 
                 Text(
                     text = when (seleccion.size) {
-                        0 -> "Tocá los días en los que tenés que hacerla"
-                        1 -> "1 día elegido"
+                        0 -> "Tocá el día en el que tenés que hacerla"
+                        1 -> "Mantené apretado otro día para elegir varios"
                         else -> "${seleccion.size} días elegidos: se crea una tarea por día"
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -187,6 +186,17 @@ private fun DialogoCalendarioVarios(
     )
 }
 
+// Toque normal: con 0 o 1 día elegido, cambia a ese día. Con 2 o más, agrega o saca ese día
+private fun alTocar(seleccion: Set<LocalDate>, dia: LocalDate): Set<LocalDate> = when {
+    seleccion.size < 2 -> setOf(dia)
+    dia in seleccion -> seleccion - dia
+    else -> seleccion + dia
+}
+
+// Mantener apretado: agrega el día sin sacar los que ya estaban
+private fun alMantener(seleccion: Set<LocalDate>, dia: LocalDate): Set<LocalDate> =
+    if (dia in seleccion) alTocar(seleccion, dia) else seleccion + dia
+
 @Composable
 private fun CeldaElegible(
     dia: LocalDate,
@@ -194,6 +204,7 @@ private fun CeldaElegible(
     elegido: Boolean,
     esHoy: Boolean,
     onTocar: () -> Unit,
+    onMantener: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -213,7 +224,7 @@ private fun CeldaElegible(
                             Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         } else Modifier
                     )
-                    .clickable { onTocar() },
+                    .combinedClickable(onClick = onTocar, onLongClick = onMantener),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

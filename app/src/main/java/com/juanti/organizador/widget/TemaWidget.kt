@@ -35,6 +35,8 @@ fun coloresWidget(context: Context): ColorProviders {
 val CLAVE_ID = ActionParameters.Key<Long>("id")
 val CLAVE_TIPO = ActionParameters.Key<String>("tipo")
 val CLAVE_SECCION = ActionParameters.Key<String>("seccion")
+// Un día, como número de día (toEpochDay), para poder mandarlo en la acción
+val CLAVE_FECHA = ActionParameters.Key<Long>("fecha")
 
 // Qué formulario abre la ventanita de carga rápida
 const val TIPO_TAREA = "tarea"

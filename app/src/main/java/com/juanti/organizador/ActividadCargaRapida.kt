@@ -54,6 +54,12 @@ class ActividadCargaRapida : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val tipo = intent.getStringExtra("tipo")
         val id = intent.getLongExtra("id", -1L)
+        // Día que estaba mirando el widget; si quedó en el pasado (widget sin refrescar), se usa hoy
+        val hoy = LocalDate.now()
+        val fecha = intent.takeIf { it.hasExtra("fecha") }
+            ?.let { LocalDate.ofEpochDay(it.getLongExtra("fecha", 0L)) }
+            ?.takeIf { !it.isBefore(hoy) }
+            ?: hoy
 
         setContent {
             HabitsAndToDoTheme {
@@ -71,6 +77,7 @@ class ActividadCargaRapida : ComponentActivity() {
                         }
                     )
                     else -> FormularioTarea(
+                        fechaInicial = fecha,
                         onCancelar = { finish() },
                         onGuardar = { tareas ->
                             guardar { bd -> tareas.forEach { bd.tareaPlanDao().insertar(it) } }
@@ -92,14 +99,18 @@ class ActividadCargaRapida : ComponentActivity() {
 }
 
 @Composable
-private fun FormularioTarea(onCancelar: () -> Unit, onGuardar: (List<TareaPlan>) -> Unit) {
+private fun FormularioTarea(
+    fechaInicial: LocalDate,
+    onCancelar: () -> Unit,
+    onGuardar: (List<TareaPlan>) -> Unit
+) {
     val context = LocalContext.current
     val hoy = remember { LocalDate.now() }
     val flujo = remember { BaseDeDatos.obtener(context).deadlineDao().pendientesConPlan(hoy) }
     val deadlines by flujo.collectAsState(initial = emptyList())
 
     var titulo by remember { mutableStateOf("") }
-    var fechas by remember { mutableStateOf(setOf(hoy)) }
+    var fechas by remember { mutableStateOf(setOf(fechaInicial)) }
     var deadlineId by remember { mutableStateOf<Long?>(null) }
     var descripcion by remember { mutableStateOf("") }
     val foco = remember { FocusRequester() }

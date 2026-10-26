@@ -67,9 +67,6 @@ private val FORMATO_DIA_MES = DateTimeFormatter.ofPattern("d 'de' MMM", ES)
 // A partir de esta altura aparece el calendario del mes
 private val ALTO_PARA_MES = 300.dp
 
-// Qué día se tocó en la tabla (como número de día, para poder mandarlo en la acción)
-private val CLAVE_FECHA = ActionParameters.Key<Long>("fecha")
-
 // Widget "Hábitos: semana y calendario"
 class WidgetGraficoHabitos : GlanceAppWidget() {
 

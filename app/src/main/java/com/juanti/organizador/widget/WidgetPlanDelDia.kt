@@ -184,7 +184,8 @@ private fun ContenidoPlan(
                     .background(GlanceTheme.colors.primary)
                     .clickable(
                         actionStartActivity<ActividadCargaRapida>(
-                            actionParametersOf(CLAVE_TIPO to TIPO_TAREA)
+                            // La tarea nueva arranca en el día que se está mirando
+                            actionParametersOf(CLAVE_TIPO to TIPO_TAREA, CLAVE_FECHA to dia.toEpochDay())
                         )
                     ),
                 contentAlignment = Alignment.Center
